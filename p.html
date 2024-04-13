@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    from flask import Flask, request, jsonify, session, redirect, url_for
+
+app = Flask(__name__)
+
+# Example user database
+users = {
+    "user1": {"username": "user1", "password": "password1"},
+    "user2": {"username": "user2", "password": "password2"}
+}
+
+# Example session token database
+session_tokens = {}
+
+# Login route
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    # Check if username and password match
+    if username in users and users[username]['password'] == password:
+        # Generate session token (for simplicity, just using username as token)
+        session['token'] = username
+        return jsonify({'message': 'Login successful'}), 200
+    else:
+        return jsonify({'message': 'Invalid credentials'}), 401
+
+# Logout route
+@app.route('/logout')
+def logout():
+    # Check if user is logged in
+    if 'token' in session:
+        # Remove session token from session and session token database
+        session.pop('token', None)
+        return jsonify({'message': 'Logout successful'}), 200
+    else:
+        return jsonify({'message': 'No user logged in'}), 401
+
+# Protected route example
+@app.route('/protected')
+def protected():
+    # Check if user is logged in
+    if 'token' in session:
+        # Get username from session token
+        username = session['token']
+        return jsonify({'message': f'Hello, {username}! This is a protected route'}), 200
+    else:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+if __name__ == '__main__':
+    app.secret_key = 'your_secret_key'  # Required for session
+    app.run(debug=True)
+
+</body>
+</html>
